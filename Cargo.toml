@@ -1,5 +1,5 @@
 [package]
-name = "micropython-vfs"
+name = "micropython-fuse"
 version = "0.1.0"
 edition = "2018"
 
