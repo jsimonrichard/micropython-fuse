@@ -1,9 +1,11 @@
-use std::thread;
-use std::time::Duration;
 use crate::repl::Repl;
 use crate::{ReplHashMap};
+
+use std::thread;
+use std::time::Duration;
 use std::convert::TryInto;
 use std::collections::HashSet;
+use log::{warn, info};
 
 const THREAD_DELAY_NANOS: u32 = 50_000_000;
 
@@ -11,6 +13,8 @@ const THREAD_DELAY_NANOS: u32 = 50_000_000;
 pub fn start_dev_listener(repls_lock: ReplHashMap) {
   // Start the listener thread
   thread::spawn(move || {
+    info!("Device Listener Thread started");
+
     let delay = Duration::new(0, THREAD_DELAY_NANOS);
 
     // Blacklist for devices that we failed to connect with
@@ -31,7 +35,7 @@ pub fn start_dev_listener(repls_lock: ReplHashMap) {
           if !repls.contains_key(&device.port_name) 
                 && !black_list.contains(&device.port_name) {
 
-            println!("Adding device: {}", &device.port_name);
+            info!("Mounting device: {}", &device.port_name);
 
             match Repl::from_path(&device.port_name) {
               Ok(r) => {
@@ -42,7 +46,7 @@ pub fn start_dev_listener(repls_lock: ReplHashMap) {
               }
               Err(e) => {
                 // If it failed, add the device to the black list
-                eprint!("Unable to start REPL for {} with error {}", device.port_name, e);
+                warn!("Unable to start REPL for {}\n Error: {}", device.port_name, e);
                 black_list.insert(device.port_name);
               }
             }
@@ -57,7 +61,7 @@ pub fn start_dev_listener(repls_lock: ReplHashMap) {
             // Remove from blacklist (if it was there)
             black_list.remove(key);
 
-            println!("Removed {}", key);
+            info!("Unmounting device: {}", key);
 
             // Do not retain
             return false;
